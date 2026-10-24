@@ -7,26 +7,35 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from benchmark.utils import _extract_tool_response_values
+from dotenv import load_dotenv
+
+load_dotenv()
+
+def _resolve_capability_path(env_var: str, folder_name: str) -> str:
+    val = os.environ.get(env_var)
+    if val:
+        val = val.strip("\"'")
+        val = val.replace("$PWD", os.getcwd())
+        val = os.path.expandvars(os.path.expanduser(val))
+        return val
+
+    test_path = Path(__file__).parent.parent / "data" / "test" / folder_name
+    if test_path.exists():
+        return str(test_path)
+
+    train_path = Path(__file__).parent.parent / "data" / "train" / folder_name
+    if train_path.exists():
+        return str(train_path)
+
+    return str(test_path)
 
 
 # Task configurations - maps capability_id to input directory path
 CAPABILITY_PATHS = {
-    1: os.environ.get(
-        "CAPABILITY_1_DIR",
-        str(Path(__file__).parent.parent / "data" / "test" / "capability_1_bi_apis"),
-    ),
-    2: os.environ.get(
-        "CAPABILITY_2_DIR",
-        str(Path(__file__).parent.parent / "data" / "test" / "capability_2_dashboard_apis"),
-    ),
-    3: os.environ.get(
-        "CAPABILITY_3_DIR",
-        str(Path(__file__).parent.parent / "data" / "test" / "capability_3_multihop_reasoning"),
-    ),
-    4: os.environ.get(
-        "CAPABILITY_4_DIR",
-        str(Path(__file__).parent.parent / "data" / "test" / "capability_4_multiturn"),
-    ),
+    1: _resolve_capability_path("CAPABILITY_1_DIR", "capability_1_bi_apis"),
+    2: _resolve_capability_path("CAPABILITY_2_DIR", "capability_2_dashboard_apis"),
+    3: _resolve_capability_path("CAPABILITY_3_DIR", "capability_3_multihop_reasoning"),
+    4: _resolve_capability_path("CAPABILITY_4_DIR", "capability_4_multiturn"),
 }
 
 @dataclass
